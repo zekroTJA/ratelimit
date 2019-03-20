@@ -2,7 +2,7 @@ language: go
 
 go:
   - tip
-  - lts/*
+  - master
 
 script:
   - bash scripts/coveralls-test.sh
