@@ -137,11 +137,24 @@ func (l *Limiter) Burst() int {
 }
 
 // Tokens returns the current available
-// ammount of tokens.
+// tokens. This value is unequal to the
+// actual value of tokens, because this
+// value is only refreshed after token
+// consumption. So the returned value
+// is the actial value of tokens plus
+// the calculated ammount of tokens which
+// are virtually generated after last
+// consumption.
 //
 // This function does not consume tokens.
 func (l *Limiter) Tokens() int {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	return l.tokens
+
+	t := l.tokens + int(time.Since(l.last)/l.limit)
+	if t > l.burst {
+		return l.burst
+	}
+
+	return t
 }
