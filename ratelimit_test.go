@@ -56,7 +56,7 @@ func TestReserveN(t *testing.T) {
 	time.Sleep(310 * time.Millisecond)
 
 	if l.Tokens() != burst {
-		t.Errorf("recovered ammount of tokens should be %d but was %d",
+		t.Errorf("recovered amount of tokens should be %d but was %d",
 			burst, l.Tokens())
 	}
 
@@ -108,7 +108,7 @@ func TestReserve(t *testing.T) {
 	time.Sleep(310 * time.Millisecond)
 
 	if l.Tokens() != burst {
-		t.Errorf("recovered ammount of tokens should be %d but was %d",
+		t.Errorf("recovered amount of tokens should be %d but was %d",
 			burst, l.Tokens())
 	}
 
@@ -152,7 +152,7 @@ func TestAllowN(t *testing.T) {
 	time.Sleep(310 * time.Millisecond)
 
 	if l.Tokens() != burst {
-		t.Errorf("recovered ammount of tokens should be %d but was %d",
+		t.Errorf("recovered amount of tokens should be %d but was %d",
 			burst, l.Tokens())
 	}
 
@@ -196,7 +196,7 @@ func TestAllow(t *testing.T) {
 	time.Sleep(310 * time.Millisecond)
 
 	if l.Tokens() != burst {
-		t.Errorf("recovered ammount of tokens should be %d but was %d",
+		t.Errorf("recovered amount of tokens should be %d but was %d",
 			burst, l.Tokens())
 	}
 

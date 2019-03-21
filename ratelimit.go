@@ -1,5 +1,5 @@
 // Package ratelimit provides a verry simple,
-// token bukkit based request rate limiter.
+// token bucket based request rate limiter.
 package ratelimit
 
 import (
@@ -21,14 +21,14 @@ type ResetTime struct {
 
 // A Limiter controls how frequently accesses
 // should be allowed to happen. It implements
-// the principle of the token bukkit, which
-// defines a bukkit with an exact size of tokens.
+// the principle of the token bucket, which
+// defines a bucket with an exact size of tokens.
 // Also, a rate is defined after exactly 1 token
-// will be added to the bukkits volume, if the
-// bukkit is not "full" (nVolume == nSize).
-// The amount of tokens in the bukkit are
+// will be added to the buckets volume, if the
+// bucket is not "full" (nVolume == nSize).
+// The amount of tokens in the bucket are
 // defined as ability to perform an action,
-// which then reduces the volume of the bukkit
+// which then reduces the volume of the bucket
 // by n tickets.
 type Limiter struct {
 	mu sync.Mutex
@@ -43,7 +43,7 @@ type Limiter struct {
 // Reservation contains the pre-defined burst rate
 // of the Limiter, the amount of remaining tickets
 // and the time until a new token will be added to
-// the bukkit if Remaining == 0. Else, reset will
+// the bucket if Remaining == 0. Else, reset will
 // be time.Time{} (0001-01-01 00:00:00 +0000 UTC).
 //
 // This struct contains JSON tags, so it can be
@@ -186,7 +186,7 @@ func (r *ResetTime) IsNil() bool {
 // Unix overwrites time.Time#Unix()
 // so it will return 0 if IsNil is
 // true. Else, it will behave like
-// defualt.
+// default.
 func (r *ResetTime) Unix() int64 {
 	if r.isNil {
 		return 0
@@ -198,7 +198,7 @@ func (r *ResetTime) Unix() int64 {
 // UnixNano overwrites time.Time#UnixNano()
 // so it will return 0 if IsNil is
 // true. Else, it will behave like
-// defualt.
+// default.
 func (r *ResetTime) UnixNano() int64 {
 	if r.isNil {
 		return 0

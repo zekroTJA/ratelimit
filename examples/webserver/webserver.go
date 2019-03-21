@@ -29,7 +29,7 @@ type webServer struct {
 // newWebServer creates a new instance of
 // a webServer and adds the root handlers
 func newWebServer(addr string) *webServer {
-	// Creating a new webServer witn a new
+	// Creating a new webServer with a new
 	// Server, a new ServeMux and the
 	// initialized limiters map.
 	ws := &webServer{
@@ -61,7 +61,7 @@ func (ws *webServer) start() error {
 // the availability of a limiter for the connections
 // address or creating it if not existing. Then,
 // the availability of tokens will be checked
-// to perform an action. This state will be retunred
+// to perform an action. This state will be returned
 // as boolean.
 func (ws *webServer) checkLimit(w http.ResponseWriter, r *http.Request) bool {
 	// Getting the address of the incomming connection.
@@ -75,7 +75,7 @@ func (ws *webServer) checkLimit(w http.ResponseWriter, r *http.Request) bool {
 		addr = strings.Join(split[0:len(split)-1], ":")
 	}
 
-	// Getting the limiter for the current connections addres
+	// Getting the limiter for the current connections address
 	// or create one if not existent.
 	limiter, ok := ws.limiters[addr]
 	if !ok {
