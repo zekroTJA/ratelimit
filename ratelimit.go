@@ -7,6 +7,18 @@ import (
 	"time"
 )
 
+// ResetTime inherits from time.Time and
+// contains an extra-vaule 'isNil', which
+// identifies if Time == time.Time{}.
+// Also, the functions Unix, UnixNano
+// and Format are overwritten to take
+// notice of this extra-value.
+type ResetTime struct {
+	time.Time
+
+	isNil bool
+}
+
 // A Limiter controls how frequently accesses
 // should be allowed to happen. It implements
 // the principle of the token bukkit, which
@@ -14,7 +26,7 @@ import (
 // Also, a rate is defined after exactly 1 token
 // will be added to the bukkits volume, if the
 // bukkit is not "full" (nVolume == nSize).
-// The ammount of tokens in the bukkit are
+// The amount of tokens in the bukkit are
 // defined as ability to perform an action,
 // which then reduces the volume of the bukkit
 // by n tickets.
@@ -29,7 +41,7 @@ type Limiter struct {
 }
 
 // Reservation contains the pre-defined burst rate
-// of the Limiter, the ammount of remaining tickets
+// of the Limiter, the amount of remaining tickets
 // and the time until a new token will be added to
 // the bukkit if Remaining == 0. Else, reset will
 // be time.Time{} (0001-01-01 00:00:00 +0000 UTC).
@@ -39,7 +51,7 @@ type Limiter struct {
 type Reservation struct {
 	Burst     int       `json:"burst"`
 	Remaining int       `json:"remaining"`
-	Reset     time.Time `json:"reset"`
+	Reset     ResetTime `json:"reset"`
 }
 
 // NewLimiter returns a new instance of Limiter
@@ -53,7 +65,7 @@ func NewLimiter(l time.Duration, b int) *Limiter {
 	}
 }
 
-// ReserveN checks if an ammount of n tickets are
+// ReserveN checks if an amount of n tickets are
 // currently available. If this is the case, true
 // will be returned with a Reservation object as
 // status information of the Limiter and n tokens
@@ -73,6 +85,9 @@ func (l *Limiter) ReserveN(n int) (bool, *Reservation) {
 
 	res := &Reservation{
 		Burst: l.burst,
+		Reset: ResetTime{
+			isNil: true,
+		},
 	}
 
 	tokensSinceLast := int(time.Since(l.last) / l.limit)
@@ -87,14 +102,16 @@ func (l *Limiter) ReserveN(n int) (bool, *Reservation) {
 		res.Remaining = l.tokens
 
 		if l.tokens == 0 {
-			res.Reset = l.last.Add(l.limit)
+			res.Reset.Time = l.last.Add(l.limit)
+			res.Reset.isNil = false
 		}
 
 		return true, res
 	}
 
 	res.Remaining = l.tokens
-	res.Reset = l.last.Add(l.limit)
+	res.Reset.Time = l.last.Add(l.limit)
+	res.Reset.isNil = false
 
 	return false, res
 }
@@ -142,7 +159,7 @@ func (l *Limiter) Burst() int {
 // value is only refreshed after token
 // consumption. So the returned value
 // is the actial value of tokens plus
-// the calculated ammount of tokens which
+// the calculated amount of tokens which
 // are virtually generated after last
 // consumption.
 //
@@ -157,4 +174,51 @@ func (l *Limiter) Tokens() int {
 	}
 
 	return t
+}
+
+// IsNil returns the boolean value if
+// the inner Time value is equal
+// an empty time object (time.Time{}).
+func (r *ResetTime) IsNil() bool {
+	return r.isNil
+}
+
+// Unix overwrites time.Time#Unix()
+// so it will return 0 if IsNil is
+// true. Else, it will behave like
+// defualt.
+func (r *ResetTime) Unix() int64 {
+	if r.isNil {
+		return 0
+	}
+
+	return r.Time.Unix()
+}
+
+// UnixNano overwrites time.Time#UnixNano()
+// so it will return 0 if IsNil is
+// true. Else, it will behave like
+// defualt.
+func (r *ResetTime) UnixNano() int64 {
+	if r.isNil {
+		return 0
+	}
+
+	return r.Time.UnixNano()
+}
+
+// Format overwrites time.Time#Format()
+// so it will return the value of def
+// (if not defined it will return "") if
+// IsNil is true. Else, it will behave
+// like default.
+func (r *ResetTime) Format(layout string, def ...string) string {
+	if r.isNil {
+		if len(def) > 0 {
+			return def[0]
+		}
+		return ""
+	}
+
+	return r.Time.Format(layout)
 }
