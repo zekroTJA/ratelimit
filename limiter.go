@@ -116,6 +116,15 @@ func (l *Limiter) Limit() time.Duration {
 	return l.limit
 }
 
+// SetLimit sets a new value for the rate
+// limiters limit duration withour resetting
+// the state of the limiter.
+func (l *Limiter) SetLimit(newL time.Duration) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	l.limit = newL
+}
+
 // Burst returns the defined burst value.
 //
 // This function does not consume tokens.
@@ -123,6 +132,15 @@ func (l *Limiter) Burst() int {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	return l.burst
+}
+
+// SetBurst sets a new value for the rate
+// limiters burst value withour resetting
+// the state of the limiter.
+func (l *Limiter) SetBurst(newB int) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	l.burst = newB
 }
 
 // Tokens returns the current available
@@ -146,4 +164,15 @@ func (l *Limiter) Tokens() int {
 	}
 
 	return t
+}
+
+// Reset sets the state of the limiter to
+// the initial state with b tokens available
+// and last set to 0.
+func (l *Limiter) Reset() {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	l.tokens = l.burst
+	l.last = time.Time{}
 }
