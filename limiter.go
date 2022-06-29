@@ -47,15 +47,15 @@ func NewLimiter(l time.Duration, b int) *Limiter {
 // with a Reservation object containing the Limiters
 // status containing the time until next token
 // generation.
-func (l *Limiter) ReserveN(n int) (bool, *Reservation) {
+func (l *Limiter) ReserveN(n int) (bool, Reservation) {
 	if n <= 0 {
-		return true, nil
+		return true, Reservation{}
 	}
 
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
-	res := &Reservation{
+	res := Reservation{
 		Burst: l.burst,
 		Reset: ResetTime{
 			isNil: true,
@@ -89,7 +89,7 @@ func (l *Limiter) ReserveN(n int) (bool, *Reservation) {
 }
 
 // Reserve is shorthand for ReserveN(1).
-func (l *Limiter) Reserve() (bool, *Reservation) {
+func (l *Limiter) Reserve() (bool, Reservation) {
 	return l.ReserveN(1)
 }
 

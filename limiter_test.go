@@ -34,7 +34,7 @@ func TestReserveN(t *testing.T) {
 	l := NewLimiter(limit, burst)
 
 	ok, res := l.ReserveN(0)
-	if !ok || res != nil {
+	if !ok || (res != Reservation{}) {
 		t.Errorf(
 			"ReserveN(0) should return (true, nil) but returned (%t, %+v)",
 			ok, res)
