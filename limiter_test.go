@@ -132,25 +132,27 @@ func TestReserve(t *testing.T) {
 
 	l = NewLimiter(limit, burst)
 
-	for i := 0; i < 14; i++ {
-		ok, _ := l.ReserveN(1)
-
-		switch i {
-		case 0, 1, 2:
-			if !ok {
-				t.Errorf("ROUND %d | ok was false but should be true", i)
-			}
-		case 3, 4, 5, 6, 7, 8, 9, 10, 11:
-			if ok {
-				t.Errorf("ROUND %d | ok was true but should be false", i)
-			}
-		case 12:
-			if !ok {
-				t.Errorf("ROUND %d | ok was false but should be true", i)
-			}
+	for i := 0; i < 3; i++ {
+		ok, _ = l.Reserve()
+		if !ok {
+			t.Fatalf("Reservation was not successful")
 		}
+	}
 
-		time.Sleep(10 * time.Millisecond)
+	ok, _ = l.Reserve()
+	if ok {
+		t.Fatalf("Reservation was successful even though it should not")
+	}
+
+	time.Sleep(110 * time.Millisecond)
+	ok, _ = l.Reserve()
+	if !ok {
+		t.Fatalf("Reservation was not successful")
+	}
+
+	ok, _ = l.Reserve()
+	if ok {
+		t.Fatalf("Reservation was successful even though it should not")
 	}
 }
 
@@ -176,25 +178,41 @@ func TestAllowN(t *testing.T) {
 
 	l = NewLimiter(limit, burst)
 
-	for i := 0; i < 14; i++ {
-		ok := l.AllowN(1)
-
-		switch i {
-		case 0, 1, 2:
-			if !ok {
-				t.Errorf("ROUND %d | ok was false but should be true", i)
-			}
-		case 3, 4, 5, 6, 7, 8, 9, 10, 11:
-			if ok {
-				t.Errorf("ROUND %d | ok was true but should be false", i)
-			}
-		case 12:
-			if !ok {
-				t.Errorf("ROUND %d | ok was false but should be true", i)
-			}
+	for i := 0; i < 3; i++ {
+		ok = l.AllowN(1)
+		if !ok {
+			t.Fatalf("Reservation was not successful")
 		}
+	}
 
-		time.Sleep(10 * time.Millisecond)
+	ok = l.AllowN(1)
+	if ok {
+		t.Fatalf("Reservation was successful even though it should not")
+	}
+
+	time.Sleep(110 * time.Millisecond)
+	ok = l.AllowN(1)
+	if !ok {
+		t.Fatalf("Reservation was not successful")
+	}
+
+	ok = l.AllowN(1)
+	if ok {
+		t.Fatalf("Reservation was successful even though it should not")
+	}
+
+	time.Sleep(210 * time.Millisecond)
+	ok = l.AllowN(3)
+	if ok {
+		t.Fatalf("Reservation was successful even though it should not")
+	}
+	ok = l.AllowN(2)
+	if !ok {
+		t.Fatalf("Reservation was not successful")
+	}
+	ok = l.AllowN(1)
+	if ok {
+		t.Fatalf("Reservation was successful even though it should not")
 	}
 }
 
@@ -220,25 +238,27 @@ func TestAllow(t *testing.T) {
 
 	l = NewLimiter(limit, burst)
 
-	for i := 0; i < 14; i++ {
-		ok := l.Allow()
-
-		switch i {
-		case 0, 1, 2:
-			if !ok {
-				t.Errorf("ROUND %d | ok was false but should be true", i)
-			}
-		case 3, 4, 5, 6, 7, 8, 9, 10, 11:
-			if ok {
-				t.Errorf("ROUND %d | ok was true but should be false", i)
-			}
-		case 12:
-			if !ok {
-				t.Errorf("ROUND %d | ok was false but should be true", i)
-			}
+	for i := 0; i < 3; i++ {
+		ok = l.Allow()
+		if !ok {
+			t.Fatalf("Reservation was not successful")
 		}
+	}
 
-		time.Sleep(10 * time.Millisecond)
+	ok = l.Allow()
+	if ok {
+		t.Fatalf("Reservation was successful even though it should not")
+	}
+
+	time.Sleep(110 * time.Millisecond)
+	ok = l.Allow()
+	if !ok {
+		t.Fatalf("Reservation was not successful")
+	}
+
+	ok = l.Allow()
+	if ok {
+		t.Fatalf("Reservation was successful even though it should not")
 	}
 }
 
