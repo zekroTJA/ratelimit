@@ -300,3 +300,33 @@ func TestTokens(t *testing.T) {
 		t.Errorf("l.Tokens() should be %d but was %d", burst-1, tg)
 	}
 }
+
+func TestReserve_zero(t *testing.T) {
+	l := NewLimiter(0, 10)
+
+	ok, res := l.ReserveN(1)
+	if ok || (res != Reservation{}) {
+		t.Error("ReserveN should return false when l is 0")
+	}
+
+	l = NewLimiter(100*time.Millisecond, 0)
+
+	ok, res = l.ReserveN(1)
+	if ok || (res != Reservation{}) {
+		t.Error("ReserveN should return false when b is 0")
+	}
+
+	l = NewLimiter(-1, 10)
+
+	ok, res = l.ReserveN(1)
+	if ok || (res != Reservation{}) {
+		t.Error("ReserveN should return false when b is -1")
+	}
+
+	l = NewLimiter(100*time.Millisecond, -1)
+
+	ok, res = l.ReserveN(1)
+	if ok || (res != Reservation{}) {
+		t.Error("ReserveN should return false when b is -1")
+	}
+}
