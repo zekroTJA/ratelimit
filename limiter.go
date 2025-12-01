@@ -52,6 +52,10 @@ func (l *Limiter) ReserveN(n int) (bool, Reservation) {
 		return true, Reservation{}
 	}
 
+	if l.burst == 0 || l.limit == 0 {
+		return false, Reservation{}
+	}
+
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
