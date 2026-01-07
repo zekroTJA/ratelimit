@@ -49,16 +49,14 @@ jobs:
 
     - name: Get dependencies
       run: |
-        go get -v -t -d ./...
+        go mod download
 
     - name: Run Tests
       run: |
-        go test -covermode atomic -coverprofile=covprofile ./...
+        go test -race -covermode atomic -coverprofile=covprofile ./...
 
     - name: Install goveralls
-      env:
-        GO111MODULE: off
-      run: go get github.com/mattn/goveralls
+      run: go install github.com/mattn/goveralls@latest
 
     - name: Send coverage
       env:
