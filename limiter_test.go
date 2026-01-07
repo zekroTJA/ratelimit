@@ -344,3 +344,30 @@ func TestReserve_zero(t *testing.T) {
 		t.Error("ReserveN should return false when b is -1")
 	}
 }
+
+// Test for issue #1
+// https://github.com/zekroTJA/ratelimit/issues/1
+func TestReserve_reset(t *testing.T) {
+	const limit = 100 * time.Millisecond
+	const burst = 1
+
+	ts := &testTimeSource{}
+	l := NewLimiterWithTimeSource(ts.Now, limit, burst)
+
+	ok, _ := l.Reserve()
+	if !ok {
+		t.Fatal("First Reserve should return true")
+	}
+
+	ts.Advance(limit / 2)
+	ok, _ = l.Reserve()
+	if ok {
+		t.Fatal("Second Reserve should return false")
+	}
+
+	ts.Advance(limit / 2)
+	ok, _ = l.Reserve()
+	if !ok {
+		t.Fatal("Third Reserve should return true")
+	}
+}

@@ -76,14 +76,15 @@ func (l *Limiter) ReserveN(n int) (bool, Reservation) {
 	}
 
 	tokensSinceLast := int(l.now().Sub(l.last) / l.limit)
-	l.tokens += tokensSinceLast
-	l.last = l.now()
-	if l.tokens > l.burst {
-		l.tokens = l.burst
+	tokens := l.tokens + tokensSinceLast
+	if tokens > l.burst {
+		tokens = l.burst
 	}
 
-	if l.tokens >= n {
-		l.tokens -= n
+	if tokens >= n {
+		l.tokens = tokens - n
+		l.last = l.now()
+
 		res.Remaining = l.tokens
 
 		if l.tokens == 0 {
