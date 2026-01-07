@@ -17,7 +17,8 @@ import (
 // which then reduces the volume of the bucket
 // by n tickets.
 type Limiter struct {
-	mu sync.Mutex
+	mu  sync.Mutex
+	now TimeSource
 
 	limit time.Duration
 	burst int
@@ -26,15 +27,23 @@ type Limiter struct {
 	last   time.Time
 }
 
-// NewLimiter returns a new instance of Limiter
-// with a burst rate of b and a limit time
-// of l until a new token will be generated.
-func NewLimiter(l time.Duration, b int) *Limiter {
+// NewLimiterWithTimeSource returns a new instance of
+// Limiter with the given TimeSource, a burst rate of b
+// and a limit time of l until a new token will be generated.
+func NewLimiterWithTimeSource(timeSource TimeSource, l time.Duration, b int) *Limiter {
 	return &Limiter{
+		now:    timeSource,
 		limit:  l,
 		burst:  b,
 		tokens: b,
 	}
+}
+
+// NewLimiter returns a new instance of Limiter
+// with a burst rate of b and a limit time
+// of l until a new token will be generated.
+func NewLimiter(l time.Duration, b int) *Limiter {
+	return NewLimiterWithTimeSource(time.Now, l, b)
 }
 
 // ReserveN checks if an amount of n tickets are
@@ -66,9 +75,9 @@ func (l *Limiter) ReserveN(n int) (bool, Reservation) {
 		},
 	}
 
-	tokensSinceLast := int(time.Since(l.last) / l.limit)
+	tokensSinceLast := int(l.now().Sub(l.last) / l.limit)
 	l.tokens += tokensSinceLast
-	l.last = time.Now()
+	l.last = l.now()
 	if l.tokens > l.burst {
 		l.tokens = l.burst
 	}
@@ -121,7 +130,7 @@ func (l *Limiter) Limit() time.Duration {
 }
 
 // SetLimit sets a new value for the rate
-// limiters limit duration withour resetting
+// limiters limit duration without resetting
 // the state of the limiter.
 func (l *Limiter) SetLimit(newL time.Duration) {
 	l.mu.Lock()
@@ -162,7 +171,7 @@ func (l *Limiter) Tokens() int {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
-	t := l.tokens + int(time.Since(l.last)/l.limit)
+	t := l.tokens + int(l.now().Sub(l.last)/l.limit)
 	if t > l.burst {
 		return l.burst
 	}

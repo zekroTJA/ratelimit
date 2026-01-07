@@ -11,7 +11,7 @@ func TestNewLimiter(t *testing.T) {
 
 	l := NewLimiter(limit, burst)
 	if l == nil {
-		t.Error("NewLimiter() should not return nil")
+		t.Fatal("NewLimiter() should not return nil")
 	}
 
 	if l.limit != limit {
@@ -31,7 +31,8 @@ func TestReserveN(t *testing.T) {
 	const limit = 100 * time.Millisecond
 	const burst = 3
 
-	l := NewLimiter(limit, burst)
+	ts := &testTimeSource{}
+	l := NewLimiterWithTimeSource(ts.Now, limit, burst)
 
 	ok, res := l.ReserveN(0)
 	if !ok || (res != Reservation{}) {
@@ -53,7 +54,7 @@ func TestReserveN(t *testing.T) {
 			1, res.Remaining)
 	}
 
-	time.Sleep(310 * time.Millisecond)
+	ts.Advance(3 * limit)
 
 	if l.Tokens() != burst {
 		t.Errorf("recovered amount of tokens should be %d but was %d",
@@ -62,7 +63,8 @@ func TestReserveN(t *testing.T) {
 
 	// -----------------------------------------
 
-	l = NewLimiter(limit, burst)
+	ts = &testTimeSource{}
+	l = NewLimiterWithTimeSource(ts.Now, limit, burst)
 
 	for i := 0; i < 3; i++ {
 		ok, _ = l.ReserveN(1)
@@ -76,7 +78,7 @@ func TestReserveN(t *testing.T) {
 		t.Fatalf("Reservation was successful even though it should not")
 	}
 
-	time.Sleep(110 * time.Millisecond)
+	ts.Advance(limit)
 	ok, _ = l.ReserveN(1)
 	if !ok {
 		t.Fatalf("Reservation was not successful")
@@ -87,7 +89,7 @@ func TestReserveN(t *testing.T) {
 		t.Fatalf("Reservation was successful even though it should not")
 	}
 
-	time.Sleep(210 * time.Millisecond)
+	ts.Advance(2 * limit)
 	ok, _ = l.ReserveN(3)
 	if ok {
 		t.Fatalf("Reservation was successful even though it should not")
@@ -106,7 +108,8 @@ func TestReserve(t *testing.T) {
 	const limit = 100 * time.Millisecond
 	const burst = 3
 
-	l := NewLimiter(limit, burst)
+	ts := &testTimeSource{}
+	l := NewLimiterWithTimeSource(ts.Now, limit, burst)
 
 	ok, res := l.Reserve()
 	if !ok {
@@ -121,7 +124,7 @@ func TestReserve(t *testing.T) {
 			2, res.Remaining)
 	}
 
-	time.Sleep(310 * time.Millisecond)
+	ts.Advance(3 * limit)
 
 	if l.Tokens() != burst {
 		t.Errorf("recovered amount of tokens should be %d but was %d",
@@ -130,7 +133,8 @@ func TestReserve(t *testing.T) {
 
 	// -----------------------------------------
 
-	l = NewLimiter(limit, burst)
+	ts = &testTimeSource{}
+	l = NewLimiterWithTimeSource(ts.Now, limit, burst)
 
 	for i := 0; i < 3; i++ {
 		ok, _ = l.Reserve()
@@ -144,7 +148,7 @@ func TestReserve(t *testing.T) {
 		t.Fatalf("Reservation was successful even though it should not")
 	}
 
-	time.Sleep(110 * time.Millisecond)
+	ts.Advance(limit)
 	ok, _ = l.Reserve()
 	if !ok {
 		t.Fatalf("Reservation was not successful")
@@ -160,14 +164,15 @@ func TestAllowN(t *testing.T) {
 	const limit = 100 * time.Millisecond
 	const burst = 3
 
-	l := NewLimiter(limit, burst)
+	ts := &testTimeSource{}
+	l := NewLimiterWithTimeSource(ts.Now, limit, burst)
 
 	ok := l.AllowN(1)
 	if !ok {
 		t.Error("returned false but should return true")
 	}
 
-	time.Sleep(310 * time.Millisecond)
+	ts.Advance(3 * limit)
 
 	if l.Tokens() != burst {
 		t.Errorf("recovered amount of tokens should be %d but was %d",
@@ -176,7 +181,8 @@ func TestAllowN(t *testing.T) {
 
 	// -----------------------------------------
 
-	l = NewLimiter(limit, burst)
+	ts = &testTimeSource{}
+	l = NewLimiterWithTimeSource(ts.Now, limit, burst)
 
 	for i := 0; i < 3; i++ {
 		ok = l.AllowN(1)
@@ -184,32 +190,38 @@ func TestAllowN(t *testing.T) {
 			t.Fatalf("Reservation was not successful")
 		}
 	}
+	// 0 tokens remaining
 
 	ok = l.AllowN(1)
 	if ok {
 		t.Fatalf("Reservation was successful even though it should not")
 	}
 
-	time.Sleep(110 * time.Millisecond)
+	ts.Advance(limit)
+	// 1 tokens remaining
 	ok = l.AllowN(1)
 	if !ok {
 		t.Fatalf("Reservation was not successful")
 	}
+	// 0 tokens remaining
 
 	ok = l.AllowN(1)
 	if ok {
 		t.Fatalf("Reservation was successful even though it should not")
 	}
 
-	time.Sleep(210 * time.Millisecond)
+	ts.Advance(2 * limit)
+	// 2 tokens remaining
 	ok = l.AllowN(3)
 	if ok {
 		t.Fatalf("Reservation was successful even though it should not")
 	}
+	// 2 tokens remaining
 	ok = l.AllowN(2)
 	if !ok {
 		t.Fatalf("Reservation was not successful")
 	}
+	// 0 tokens remaining
 	ok = l.AllowN(1)
 	if ok {
 		t.Fatalf("Reservation was successful even though it should not")
@@ -220,14 +232,15 @@ func TestAllow(t *testing.T) {
 	const limit = 100 * time.Millisecond
 	const burst = 3
 
-	l := NewLimiter(limit, burst)
+	ts := &testTimeSource{}
+	l := NewLimiterWithTimeSource(ts.Now, limit, burst)
 
 	ok := l.Allow()
 	if !ok {
 		t.Error("returned false but should return true")
 	}
 
-	time.Sleep(310 * time.Millisecond)
+	ts.Advance(3 * limit)
 
 	if l.Tokens() != burst {
 		t.Errorf("recovered amount of tokens should be %d but was %d",
@@ -236,7 +249,8 @@ func TestAllow(t *testing.T) {
 
 	// -----------------------------------------
 
-	l = NewLimiter(limit, burst)
+	ts = &testTimeSource{}
+	l = NewLimiterWithTimeSource(ts.Now, limit, burst)
 
 	for i := 0; i < 3; i++ {
 		ok = l.Allow()
@@ -250,7 +264,7 @@ func TestAllow(t *testing.T) {
 		t.Fatalf("Reservation was successful even though it should not")
 	}
 
-	time.Sleep(110 * time.Millisecond)
+	ts.Advance(limit)
 	ok = l.Allow()
 	if !ok {
 		t.Fatalf("Reservation was not successful")
